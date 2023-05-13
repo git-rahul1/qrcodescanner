@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter/src/widgets/placeholder.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:qrcodescanner/result_screen.dart';
+
+
+import 'qr_code_scanner_overley.dart';
 
 const bgColor = Color(0xfffafaaa);
 
@@ -39,7 +43,7 @@ class _QRScannerState extends State<QRScanner> {
               mobileScannerController.toggleTorch();
             },
             icon: Icon(Icons.flash_on),
-            color: isFlashOn?Colors.blue: Colors.grey,
+            color: isFlashOn ? Colors.blue : Colors.grey,
           ),
           IconButton(
             onPressed: () {
@@ -50,7 +54,7 @@ class _QRScannerState extends State<QRScanner> {
               mobileScannerController.switchCamera();
             },
             icon: Icon(Icons.camera_front),
-            color:isForntCamera?Colors.blue: Colors.grey,
+            color: isForntCamera ? Colors.blue : Colors.grey,
           ),
         ],
         actionsIconTheme: IconThemeData(color: Colors.black),
@@ -98,22 +102,45 @@ class _QRScannerState extends State<QRScanner> {
             Expanded(
               flex: 4,
               child: Container(
-                  child: MobileScanner(
-                controller: mobileScannerController,
-                onDetect: (barcode) {
-                  if (!isScanedCompleted) {
-                    String code = barcode.raw ?? "---";
-                    isScanedCompleted = true;
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => ResultScreen(
-                                  closeScreen: closedScreen,
-                                  code: code,
-                                )));
-                  }
-                },
-              )),
+                  child: Stack(
+                children: [
+                  MobileScanner(
+                    controller: mobileScannerController,
+                    onDetect: (capture) {
+                      final List<Barcode> barcodes = capture.barcodes;
+                      final Uint8List? image = capture.image;
+
+                      for (final barcode in barcodes) {
+                        if (!isScanedCompleted) {
+                          String code = barcode.rawValue ?? "---";
+                          isScanedCompleted = true;
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => ResultScreen(
+                                        closeScreen: closedScreen,
+                                        code: code,
+                                      )));
+                        }
+                      }
+                    },
+                  ),
+                  Positioned.fill(
+            child: Container(
+              decoration: ShapeDecoration(
+                shape: QrScannerOverlayShape(
+                  borderColor: Colors.white,
+                  borderRadius: 10,
+                  borderLength: 20,
+                  borderWidth: 5,
+                  
+                  
+                ),
+              ),
+            ),
+          ),
+                ],
+              ),),
             ),
             Expanded(
               child: Container(
